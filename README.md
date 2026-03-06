@@ -30,6 +30,7 @@ type: custom:tap-task-panel
 title: Current Tasks
 show_header: true
 max_tasks: 20
+font_scale: 1.0
 ```
 
 ### Optional: Choose Specific Entities
@@ -37,6 +38,7 @@ max_tasks: 20
 ```yaml
 type: custom:tap-task-panel
 title: House Tasks
+font_scale: 0.9
 entities:
   - sensor.tap_task_clean_gutters
   - sensor.tap_task_replace_air_filter
@@ -49,4 +51,3 @@ entities:
 - Tap integration version that supports service `entity_id` resolution for:
   - `tap.complete_task`
   - `tap.reopen_task`
-

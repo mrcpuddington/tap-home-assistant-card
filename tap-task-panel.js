@@ -1,6 +1,7 @@
 const CARD_TYPE = "tap-task-panel";
 const DEFAULT_TITLE = "Current Tasks";
 const DEFAULT_MAX_TASKS = 25;
+const DEFAULT_FONT_SCALE = 1;
 
 class TapTaskPanelCard extends HTMLElement {
   constructor() {
@@ -10,6 +11,7 @@ class TapTaskPanelCard extends HTMLElement {
       title: DEFAULT_TITLE,
       max_tasks: DEFAULT_MAX_TASKS,
       show_header: true,
+      font_scale: DEFAULT_FONT_SCALE,
     };
     this._busy = new Set();
     this._error = "";
@@ -31,6 +33,12 @@ class TapTaskPanelCard extends HTMLElement {
       ...this._config,
       ...config,
     };
+    this._config.font_scale = clampNumber(
+      Number(this._config.font_scale ?? DEFAULT_FONT_SCALE),
+      0.8,
+      1.3,
+      DEFAULT_FONT_SCALE,
+    );
   }
 
   set hass(hass) {
@@ -100,6 +108,12 @@ class TapTaskPanelCard extends HTMLElement {
     if (!this._hass || !this.shadowRoot) return;
     const tasks = this._getTasks();
     const showHeader = this._config.show_header !== false;
+    const fontScale = clampNumber(
+      Number(this._config.font_scale ?? DEFAULT_FONT_SCALE),
+      0.8,
+      1.3,
+      DEFAULT_FONT_SCALE,
+    );
 
     const rows = tasks
       .map((task) => {
@@ -119,11 +133,11 @@ class TapTaskPanelCard extends HTMLElement {
             </div>
             <div class="actions">
               <button class="btn complete ${completeDisabled ? "disabled" : ""}" data-action="complete" data-entity-id="${escapeHtml(task.entityId)}" ${completeDisabled ? "disabled" : ""}>
-                <span class="icon">◯</span>
+                <span class="icon">✓</span>
                 <span>${task.isComplete ? "DONE" : "COMPLETE"}</span>
               </button>
               <button class="btn reopen ${reopenDisabled ? "disabled" : ""}" data-action="reopen" data-entity-id="${escapeHtml(task.entityId)}" ${reopenDisabled ? "disabled" : ""}>
-                <span class="icon">⌫</span>
+                <span class="icon">↺</span>
                 <span>REOPEN</span>
               </button>
             </div>
@@ -137,48 +151,49 @@ class TapTaskPanelCard extends HTMLElement {
         <style>
           :host {
             display: block;
+            --tap-scale: ${fontScale};
           }
 
           ha-card {
-            background: #111317;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
+            background: radial-gradient(circle at 20% -10%, rgba(0, 170, 255, 0.12), rgba(17, 19, 23, 0) 34%), #111317;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
             box-shadow: none;
             color: #e7ecf1;
-            padding: 18px 16px 8px;
+            padding: 14px 14px 8px;
           }
 
           .title {
-            font-size: 38px;
-            letter-spacing: 0.3px;
+            font-size: calc(22px * var(--tap-scale));
+            letter-spacing: 0.2px;
             font-weight: 700;
-            margin: 2px 0 14px;
+            margin: 0 0 10px;
           }
 
           .panel-title {
-            font-size: 18px;
+            font-size: calc(16px * var(--tap-scale));
             font-weight: 700;
-            margin: 0 0 6px;
+            margin: 0 0 2px;
             color: #eef4ff;
           }
 
           .row {
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
-            gap: 18px;
-            padding: 16px 0;
+            gap: 14px;
+            padding: 12px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
           }
 
           .row:first-of-type {
             border-top: 0;
-            padding-top: 6px;
+            padding-top: 10px;
           }
 
           .name-line {
-            font-size: 21px;
+            font-size: calc(17px * var(--tap-scale));
             line-height: 1.35;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
           }
 
           .name {
@@ -192,14 +207,14 @@ class TapTaskPanelCard extends HTMLElement {
           }
 
           .line {
-            font-size: 18px;
-            line-height: 1.35;
+            font-size: calc(13px * var(--tap-scale));
+            line-height: 1.4;
             color: #d5dbe5;
           }
 
           .due {
-            font-size: 18px;
-            line-height: 1.35;
+            font-size: calc(13px * var(--tap-scale));
+            line-height: 1.4;
             color: #d5dbe5;
           }
 
@@ -211,23 +226,24 @@ class TapTaskPanelCard extends HTMLElement {
           .actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             white-space: nowrap;
+            padding-left: 6px;
           }
 
           .btn {
-            border: none;
-            background: transparent;
-            padding: 6px 8px;
-            border-radius: 10px;
-            font-size: 24px;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px 9px;
+            border-radius: 9px;
+            font-size: calc(11px * var(--tap-scale));
             font-weight: 800;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.08em;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.06s ease;
+            transition: opacity 0.2s ease, transform 0.06s ease, background 0.2s ease;
           }
 
           .btn:active {
@@ -236,19 +252,30 @@ class TapTaskPanelCard extends HTMLElement {
 
           .btn.complete {
             color: #00a6ff;
+            border-color: rgba(0, 166, 255, 0.35);
+          }
+
+          .btn.complete:hover {
+            background: rgba(0, 166, 255, 0.12);
           }
 
           .btn.reopen {
             color: #f8493f;
+            border-color: rgba(248, 73, 63, 0.35);
+          }
+
+          .btn.reopen:hover {
+            background: rgba(248, 73, 63, 0.12);
           }
 
           .btn.disabled {
             opacity: 0.35;
             cursor: default;
+            background: rgba(255, 255, 255, 0.02);
           }
 
           .icon {
-            font-size: 22px;
+            font-size: calc(12px * var(--tap-scale));
             line-height: 1;
           }
 
@@ -256,32 +283,35 @@ class TapTaskPanelCard extends HTMLElement {
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             padding: 14px 0 12px;
             color: #aeb8c8;
-            font-size: 16px;
+            font-size: calc(13px * var(--tap-scale));
           }
 
           .error {
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             color: #ff5f58;
-            font-size: 14px;
+            font-size: calc(12px * var(--tap-scale));
             padding: 12px 0 8px;
           }
 
           @media (max-width: 900px) {
             .title {
-              font-size: 28px;
+              font-size: calc(18px * var(--tap-scale));
             }
             .name-line {
-              font-size: 18px;
+              font-size: calc(15px * var(--tap-scale));
             }
             .line,
             .due {
-              font-size: 15px;
+              font-size: calc(12px * var(--tap-scale));
             }
             .btn {
-              font-size: 14px;
+              font-size: calc(10px * var(--tap-scale));
             }
             .icon {
-              font-size: 16px;
+              font-size: calc(11px * var(--tap-scale));
+            }
+            .actions {
+              gap: 6px;
             }
           }
         </style>
@@ -332,6 +362,11 @@ function parseDate(value) {
   if (!value) return null;
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function clampNumber(value, min, max, fallback) {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
 }
 
 function formatDate(date) {
