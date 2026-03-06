@@ -1,0 +1,7 @@
+{
+  "name": "Tap Task Panel Card",
+  "render_readme": true,
+  "filename": "tap-task-panel.js",
+  "content_in_root": true,
+  "homeassistant": "2024.6.0"
+}
